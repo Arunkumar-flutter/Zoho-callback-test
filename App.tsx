@@ -35,7 +35,6 @@ function App() {
 
     setDetails(paymentDetails);
 
-    // Logic: Valid only if subscription_id is present
     if (paymentDetails.subscription_id) {
       setIsValid(true);
 
