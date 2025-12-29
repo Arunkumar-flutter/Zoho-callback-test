@@ -42,7 +42,8 @@ function App() {
       const syncSubscription = async () => {
         setSyncStatus('syncing');
         try {
-          await axios.post(`https://vealthx-ollamavm2.centralindia.cloudapp.azure.com/zoho-subscription-test/api/hostedpage/sync-subscription`, paymentDetails);
+          await axios.post(`https://dry-pillows-wait.loca.lt/api/hostedpage/sync-subscription`, paymentDetails);
+          // await axios.post(`https://vealthx-ollamavm2.centralindia.cloudapp.azure.com/zoho-subscription-test/api/hostedpage/sync-subscription`, paymentDetails);
           
           setSyncStatus('success');
         } catch (error) {
