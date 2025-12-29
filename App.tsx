@@ -42,7 +42,7 @@ function App() {
       const syncSubscription = async () => {
         setSyncStatus('syncing');
         try {
-          await axios.post(`https://fuzzy-facts-see.loca.lt/api/hostedpage/sync-subscription`, paymentDetails);
+          await axios.post(`https://outcome-portraits-voltage-lights.trycloudflare.com/api/hostedpage/sync-subscription`, paymentDetails);
           // await axios.post(`https://vealthx-ollamavm2.centralindia.cloudapp.azure.com/zoho-subscription-test/api/hostedpage/sync-subscription`, paymentDetails);
           
           setSyncStatus('success');
