@@ -43,7 +43,7 @@ function App() {
       const syncSubscription = async () => {
         setSyncStatus('syncing');
         try {
-          await axios.post(`https://outcome-portraits-voltage-lights.trycloudflare.com/api/hostedpage/sync-subscription`, paymentDetails);
+          await axios.post(`https://click-twins-documentation-processed.trycloudflare.com/api/hostedpage/sync-subscription`, paymentDetails);
           setSyncStatus('success');
         } catch (error) {
           console.error('Failed to sync subscription:', error);
