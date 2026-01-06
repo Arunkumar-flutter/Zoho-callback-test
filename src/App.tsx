@@ -55,7 +55,20 @@ function App() {
 
     if (paymentDetails.subscription_id) {
       setIsValid(true);
-      syncSubscription(paymentDetails);
+
+      // Call Sync API
+      const syncSubscription = async () => {
+        setSyncStatus('syncing');
+        try {
+          await axios.post(`https://vealthx-ollamavm2.centralindia.cloudapp.azure.com/zoho-subscription-test/api/hostedpage/sync-subscription`, paymentDetails);
+          setSyncStatus('success');
+        } catch (error) {
+          console.error('Failed to sync subscription:', error);
+          setSyncStatus('error');
+        }
+      };
+
+      syncSubscription();
     } else {
       setIsValid(false);
     }
