@@ -21,8 +21,8 @@ function App() {
   const syncSubscription = useCallback(async (paymentDetails: PaymentDetails) => {
     setSyncStatus('syncing');
     try {
-      const response = await axios.post(`https://click-twins-documentation-processed.trycloudflare.com/api/hostedpage/sync-subscription`, paymentDetails);
-      // const response = await axios.post(`https://vealthx-ollamavm2.centralindia.cloudapp.azure.com/zoho-subscription-test/api/hostedpage/sync-subscription`, paymentDetails);
+
+      const response = await axios.post(`https://vealthx-ollamavm2.centralindia.cloudapp.azure.com/zoho-subscription-test/api/hostedpage/sync-subscription`, paymentDetails);
 
       if (response.data && response.data.success) {
         setSyncStatus('success');
