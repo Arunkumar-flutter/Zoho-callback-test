@@ -82,12 +82,12 @@ function App() {
       if (value) params.append(key, value);
     });
 
-    const mobileAppUrl = `vealthx://app/callback?${params.toString()}`;
+    const mobileAppUrl = `https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/callback?${params.toString()}`;
     window.location.href = mobileAppUrl;
   };
 
   const handleChoosePlan = () => {
-    const mobileAppUrl = 'vealthx://app/callback'; // No params for failure case
+    const mobileAppUrl = 'https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/callback'; // No params for failure case
     window.location.href = mobileAppUrl;
   };
 
