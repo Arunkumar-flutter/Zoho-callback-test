@@ -83,12 +83,20 @@ function App() {
     });
 
     const mobileAppUrl = `vealthx://app/callback?${params.toString()}`;
-    window.location.href = mobileAppUrl;
+    window.location.href = mobileAppUrl; 
+    setTimeout(() => {
+    // fallback for web / desktop
+    window.location.href = `https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/app/callback?${params.toString()}`;
+  }, 500);
   };
 
   const handleChoosePlan = () => {
     const mobileAppUrl = `vealthx://app/callback`;
     window.location.href = mobileAppUrl;
+    setTimeout(() => {
+    // fallback for web / desktop
+    window.location.href = `https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/app/callback`;
+  }, 500);
   };
 
   const handleRetry = () => {
