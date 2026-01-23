@@ -81,14 +81,23 @@ function App() {
     Object.entries(details).forEach(([key, value]) => {
       if (value) params.append(key, value);
     });
-    const mobileAppUrl = `https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/callback?${params.toString()}`;
-    window.location.href = mobileAppUrl;
+
+    const mobileAppUrl = `vealthx://app/callback?${params.toString()}`;
+    window.location.href = mobileAppUrl; 
+    setTimeout(() => {
+    // fallback for web / desktop
+    window.location.href = `https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/app/callback?${params.toString()}`;
+  }, 500);
   };
   
 
   const handleChoosePlan = () => {
-    const mobileAppUrl = 'https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/callback'; // No params for failure case
+    const mobileAppUrl = `vealthx://app/callback`;
     window.location.href = mobileAppUrl;
+    setTimeout(() => {
+    // fallback for web / desktop
+    window.location.href = `https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/app/callback`;
+  }, 500);
   };
 
   const handleRetry = () => {
