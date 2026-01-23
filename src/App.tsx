@@ -81,10 +81,10 @@ function App() {
     Object.entries(details).forEach(([key, value]) => {
       if (value) params.append(key, value);
     });
-
     const mobileAppUrl = `https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/callback?${params.toString()}`;
     window.location.href = mobileAppUrl;
   };
+  
 
   const handleChoosePlan = () => {
     const mobileAppUrl = 'https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/callback'; // No params for failure case
