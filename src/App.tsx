@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { ArrowRight, CheckCircle, Receipt, CreditCard, Calendar, Mail, FileText, XCircle, RotateCcw } from 'lucide-react';
+import { isAndroid, isIOS } from "react-device-detect";
+
 
 interface PaymentDetails {
   subscription_id: string | null;
@@ -51,6 +53,7 @@ function App() {
       invoice_number: urlParams.get('invoicenumber'),
     };
 
+
     setDetails(paymentDetails);
 
     if (paymentDetails.subscription_id) {
@@ -82,22 +85,26 @@ function App() {
       if (value) params.append(key, value);
     });
 
-    const mobileAppUrl = `vealthx://app/callback?${params.toString()}`;
-    window.location.href = mobileAppUrl; 
-    setTimeout(() => {
-    // fallback for web / desktop
-    window.location.href = `https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/app/callback?${params.toString()}`;
-  }, 500);
+    const WEB_FALLBACK_URL = 'https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/app/callback?';
+
+    if (isAndroid) {
+      window.location.href = `vealthx://app/callback?${params.toString()}`;
+    } else if (isIOS) {
+      window.location.href = `vealthx://app/callback?${params.toString()}`;
+    } else {
+      window.location.href = `${WEB_FALLBACK_URL}` + params.toString();
+    }
+
   };
-  
+
 
   const handleChoosePlan = () => {
     const mobileAppUrl = `vealthx://app/callback`;
     window.location.href = mobileAppUrl;
     setTimeout(() => {
-    // fallback for web / desktop
-    window.location.href = `https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/app/callback`;
-  }, 500);
+      // fallback for web / desktop
+      window.location.href = `https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/app/callback`;
+    }, 500);
   };
 
   const handleRetry = () => {
