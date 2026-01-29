@@ -5,7 +5,8 @@
       {
         "appID": "FQSPG3ZBL2.com.vealthx.apps",
         "paths": [
-          "/*"
+          "/callback/*",
+          "/app/*"
         ]
       }
     ]
