@@ -102,7 +102,7 @@ function App() {
     const mobileAppUrl = `vealthx://app/callback`;
     window.location.href = mobileAppUrl;
     setTimeout(() => {
-      // fallback for web / desktop
+    
       window.location.href = `https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/app/callback`;
     }, 500);
   };
@@ -113,7 +113,7 @@ function App() {
     }
   };
 
-  // 1. Initial Loading (checking params)
+ 
   if (isValid === null) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
