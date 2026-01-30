@@ -69,10 +69,11 @@ function App() {
         setSyncStatus('syncing');
         try {
           // Send only hostedpage_id to the API
-          await axios.post(
-            `https://vealthx-ollamavm2.centralindia.cloudapp.azure.com/zoho-subscription-test/api/hostedpage/payment-complete`,
-            { hostedpage_id: paymentDetails.hostedpage_id }
-          );
+           const response = await axios.post(
+        `https://vealthx-ollamavm2.centralindia.cloudapp.azure.com/zoho-subscription-test/api/hostedpage/sync-subscription`,
+       PaymentDetails
+      );
+
           setSyncStatus('success');
         } catch (error) {
           console.error('Failed to sync subscription:', error);
