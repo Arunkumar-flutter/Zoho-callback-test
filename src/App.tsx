@@ -26,8 +26,8 @@ function App() {
     try {
       // Send only hostedpage_id to the API
       const response = await axios.post(
-        `https://vealthx-ollamavm2.centralindia.cloudapp.azure.com/zoho-subscription-test/api/hostedpage/payment-complete`,
-        { hostedpage_id: paymentDetails.hostedpage_id }
+        `https://vealthx-ollamavm2.centralindia.cloudapp.azure.com/zoho-subscription-test/api/hostedpage/sync-subscription`,
+       PaymentDetails
       );
 
       if (response.data && response.data.success) {
