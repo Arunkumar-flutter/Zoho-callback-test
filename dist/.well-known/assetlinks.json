@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.vealthx.apps",
+      "sha256_cert_fingerprints":
+        ["EC:E7:A0:D6:A2:F5:7A:72:8D:72:CA:AD:9C:1D:EB:CA:E7:5C:70:F1:73:E0:57:ED:6B:3F:2C:CB:4D:A3:24:64"]
+    }
+  }
+]
+

@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { ArrowRight, CheckCircle, Receipt, CreditCard, Calendar, Mail, FileText, XCircle, RotateCcw } from 'lucide-react';
+import { isAndroid, isIOS } from "react-device-detect";
+
 
 interface PaymentDetails {
+  hostedpage_id: string | null;
   subscription_id: string | null;
   plan_name: string | null;
   invoice_amount: string | null;
@@ -21,8 +24,11 @@ function App() {
   const syncSubscription = useCallback(async (paymentDetails: PaymentDetails) => {
     setSyncStatus('syncing');
     try {
-
-      const response = await axios.post(`https://vealthx-ollamavm2.centralindia.cloudapp.azure.com/zoho-subscription-test/api/hostedpage/sync-subscription`, paymentDetails);
+    
+      const response = await axios.post(
+        `https://vealthx-ollamavm2.centralindia.cloudapp.azure.com/zoho-subscription-test/api/hostedpage/payment-complete`,
+        { hostedpage_id: paymentDetails.hostedpage_id }
+      );
 
       if (response.data && response.data.success) {
         setSyncStatus('success');
@@ -41,6 +47,7 @@ function App() {
     const urlParams = new URLSearchParams(window.location.search);
 
     const paymentDetails: PaymentDetails = {
+      hostedpage_id: urlParams.get('hostedpage_id'),
       subscription_id: urlParams.get('subscription_id'),
       plan_name: urlParams.get('plan_name'),
       invoice_amount: urlParams.get('invoice_amount'),
@@ -51,11 +58,29 @@ function App() {
       invoice_number: urlParams.get('invoicenumber'),
     };
 
+
     setDetails(paymentDetails);
 
-    if (paymentDetails.subscription_id) {
+    if (paymentDetails.hostedpage_id) {
       setIsValid(true);
-      syncSubscription(paymentDetails);
+
+      // Call Sync API
+      const syncSubscription = async () => {
+        setSyncStatus('syncing');
+        try {
+          // Send only hostedpage_id to the API
+           const response = await axios.post(
+        `https://vealthx-ollamavm2.centralindia.cloudapp.azure.com/zoho-subscription-test/api/hostedpage/payment-complete`,
+       { hostedpage_id: paymentDetails.hostedpage_id }
+      );
+          setSyncStatus('success');
+        } catch (error) {
+          console.error('Failed to sync subscription:', error);
+          setSyncStatus('error');
+        }
+      };
+
+      syncSubscription();
     } else {
       setIsValid(false);
     }
@@ -69,13 +94,26 @@ function App() {
       if (value) params.append(key, value);
     });
 
-    const mobileAppUrl = `vealthx://app/callback?${params.toString()}`;
-    window.location.href = mobileAppUrl;
+    const WEB_FALLBACK_URL = 'https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/app/callback?';
+
+    if (isAndroid) {
+      window.location.href = `vealthx://app/callback?${params.toString()}`;
+    } else if (isIOS) {
+      window.location.href = `vealthx://app/callback?${params.toString()}`;
+    } else {
+      window.location.href = `${WEB_FALLBACK_URL}` + params.toString();
+    }
+
   };
 
+
   const handleChoosePlan = () => {
-    const mobileAppUrl = 'vealthx://app/callback'; // No params for failure case
+    const mobileAppUrl = `vealthx://app/callback`;
     window.location.href = mobileAppUrl;
+    setTimeout(() => {
+
+      window.location.href = `https://zealous-glacier-0ff3bca00.4.azurestaticapps.net/app/callback`;
+    }, 500);
   };
 
   const handleRetry = () => {
@@ -84,7 +122,7 @@ function App() {
     }
   };
 
-  // 1. Initial Loading (checking params)
+
   if (isValid === null) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
