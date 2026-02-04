@@ -274,9 +274,7 @@ function App() {
                         <span>Retry Sync</span>
                       </button>
                     )}
-                      <a href="/app/v0/callback?success=true&id=7347dc46...">
-Continue to Vealthx
-</a>
+<button onclick="window.close()">Close</button>
 
                     <button
                       onClick={handleChoosePlan}
