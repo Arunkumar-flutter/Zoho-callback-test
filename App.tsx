@@ -64,7 +64,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // Extract URL parameters
+    // Extract URL parameters - properly decodes + and % encodings
     const urlParams = new URLSearchParams(window.location.search);
 
     const paymentDetails: PaymentDetails = {
@@ -78,7 +78,6 @@ function App() {
       payment_id: urlParams.get('paymentnumber'),
       invoice_number: urlParams.get('invoicenumber'),
     };
-
 
     setDetails(paymentDetails);
 
@@ -126,6 +125,15 @@ function App() {
     }
   };
 
+  // Helper: check if URL params contain meaningful display data
+  const hasUrlParams = !!(
+    details?.plan_name ||
+    details?.invoice_amount ||
+    details?.email ||
+    details?.transaction_id ||
+    details?.recurring_charges
+  );
+
 
   if (isValid === null) {
     return (
@@ -164,104 +172,125 @@ function App() {
                   <CheckCircle className="w-8 h-8 text-white" />
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-2">Payment Successful</h1>
-                <p className="text-green-100">{apiResponse?.message || 'Thank you for your subscription'}</p>
+                <p className="text-green-100">{hasUrlParams ? 'Thank you for your subscription' : apiResponse?.message || 'Thank you for your subscription'}</p>
               </div>
 
               {/* Content */}
               <div className="p-6">
-                {details && (
-                  <div className="space-y-4">
-                    {/* Amount Card */}
-                    <div className="bg-gray-50 rounded-2xl p-4 flex items-center justify-between border border-gray-100">
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <Receipt className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium">Amount Paid</p>
-                          <p className="text-lg font-bold text-gray-900">{apiResponse?.data?.amount ?? details.invoice_amount ?? '0.00'}</p>
+                {hasUrlParams ? (
+                  // Show URL params when available
+                  details && (
+                    <div className="space-y-4">
+                      {/* Amount Card */}
+                      <div className="bg-gray-50 rounded-2xl p-4 flex items-center justify-between border border-gray-100">
+                        <div className="flex items-center space-x-3">
+                          <div className="p-2 bg-green-100 rounded-lg">
+                            <Receipt className="w-5 h-5 text-green-600" />
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 font-medium">Amount Paid</p>
+                            <p className="text-lg font-bold text-gray-900">{details.invoice_amount || '0.00'}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Details List */}
-                    <div className="space-y-3 pt-2">
-                      {details.plan_name && (
-                        <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors">
-                          <div className="flex items-center space-x-3">
-                            <CreditCard className="w-5 h-5 text-gray-400" />
-                            <span className="text-sm text-gray-600">Plan Name</span>
+                      {/* Details List - parsed from URL */}
+                      <div className="space-y-3 pt-2">
+                        {details.plan_name && (
+                          <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors">
+                            <div className="flex items-center space-x-3">
+                              <CreditCard className="w-5 h-5 text-gray-400" />
+                              <span className="text-sm text-gray-600">Plan Name</span>
+                            </div>
+                            <span className="text-sm font-semibold text-gray-900">{details.plan_name}</span>
                           </div>
-                          <span className="text-sm font-semibold text-gray-900">{apiResponse?.data?.plan_code ?? details.plan_name}</span>
-                        </div>
-                      )}
-
-                      {details.transaction_id && (
-                        <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors">
-                          <div className="flex items-center space-x-3">
-                            <FileText className="w-5 h-5 text-gray-400" />
-                            <span className="text-sm text-gray-600">Transaction ID</span>
-                          </div>
-                          <span className="text-sm font-mono text-gray-900 bg-gray-100 px-2 py-1 rounded">{details.transaction_id}</span>
-                        </div>
-                      )}
-
-                      {details.recurring_charges && (
-                        <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors">
-                          <div className="flex items-center space-x-3">
-                            <Calendar className="w-5 h-5 text-gray-400" />
-                            <span className="text-sm text-gray-600">Recurring</span>
-                          </div>
-                          <span className="text-sm font-semibold text-gray-900">{details.recurring_charges}</span>
-                        </div>
-                      )}
-
-                      {details.email && (
-                        <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors">
-                          <div className="flex items-center space-x-3">
-                            <Mail className="w-5 h-5 text-gray-400" />
-                            <span className="text-sm text-gray-600">Email</span>
-                          </div>
-                          <span className="text-sm font-medium text-gray-900 truncate max-w-[150px]" title={details.email}>{details.email}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* API Response Display */}
-                    {apiResponse && (
-                      <div className="mt-4 bg-gray-50 rounded-xl p-4 border border-gray-200">
-                        {apiResponse.message && (
-                          <p className="text-sm text-gray-800 font-medium mb-3">{apiResponse.message}</p>
                         )}
 
-                        {apiResponse.data && (
-                          <div className="space-y-2 bg-white rounded-lg p-3 border border-gray-100">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-500">Subscription ID</span>
-                              <span className="text-sm font-mono font-medium text-gray-900">{apiResponse.data.subscription_id}</span>
+                        {details.transaction_id && (
+                          <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors">
+                            <div className="flex items-center space-x-3">
+                              <FileText className="w-5 h-5 text-gray-400" />
+                              <span className="text-sm text-gray-600">Transaction ID</span>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-500">Status</span>
-                              <span className="text-sm font-semibold text-gray-900 capitalize bg-green-50 px-2 py-1 rounded">{apiResponse.data.status}</span>
+                            <span className="text-sm font-mono text-gray-900 bg-gray-100 px-2 py-1 rounded">{details.transaction_id}</span>
+                          </div>
+                        )}
+
+                        {details.recurring_charges && (
+                          <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors">
+                            <div className="flex items-center space-x-3">
+                              <Calendar className="w-5 h-5 text-gray-400" />
+                              <span className="text-sm text-gray-600">Recurring</span>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-500">Plan Code</span>
+                            <span className="text-sm font-semibold text-gray-900">{details.recurring_charges}</span>
+                          </div>
+                        )}
+
+                        {details.email && (
+                          <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors">
+                            <div className="flex items-center space-x-3">
+                              <Mail className="w-5 h-5 text-gray-400" />
+                              <span className="text-sm text-gray-600">Email</span>
+                            </div>
+                            <span className="text-sm font-medium text-gray-900 truncate max-w-[150px]" title={details.email}>{details.email}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  // Params empty -> show API response
+                  apiResponse && (
+                    <div className="space-y-4">
+                      {apiResponse.message && (
+                        <p className="text-sm text-gray-700 font-medium text-center bg-gray-50 rounded-xl p-3 border border-gray-100">{apiResponse.message}</p>
+                      )}
+
+                      {apiResponse.data && (
+                        <div className="space-y-3">
+                          <div className="bg-gray-50 rounded-2xl p-4 flex items-center justify-between border border-gray-100">
+                            <div className="flex items-center space-x-3">
+                              <div className="p-2 bg-green-100 rounded-lg">
+                                <Receipt className="w-5 h-5 text-green-600" />
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500 font-medium">Amount Paid</p>
+                                <p className="text-lg font-bold text-gray-900">₹{apiResponse.data.amount}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3 pt-2">
+                            <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors">
+                              <div className="flex items-center space-x-3">
+                                <CreditCard className="w-5 h-5 text-gray-400" />
+                                <span className="text-sm text-gray-600">Plan Code</span>
+                              </div>
                               <span className="text-sm font-semibold text-gray-900">{apiResponse.data.plan_code}</span>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-500">Amount</span>
-                              <span className="text-sm font-bold text-gray-900">₹{apiResponse.data.amount}</span>
+                            <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors">
+                              <div className="flex items-center space-x-3">
+                                <FileText className="w-5 h-5 text-gray-400" />
+                                <span className="text-sm text-gray-600">Subscription ID</span>
+                              </div>
+                              <span className="text-sm font-mono text-gray-900 bg-gray-100 px-2 py-1 rounded text-xs">{apiResponse.data.subscription_id}</span>
+                            </div>
+                            <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-colors">
+                              <div className="flex items-center space-x-3">
+                                <Calendar className="w-5 h-5 text-gray-400" />
+                                <span className="text-sm text-gray-600">Status</span>
+                              </div>
+                              <span className="text-sm font-semibold text-gray-900 capitalize bg-green-50 px-2 py-1 rounded">{apiResponse.data.status}</span>
                             </div>
                           </div>
-                        )}
+                        </div>
+                      )}
 
-                        <details className="mt-3">
-                          <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600">View raw JSON</summary>
-                          <pre className="mt-2 bg-gray-900 text-green-400 text-xs p-3 rounded-lg overflow-auto max-h-48 whitespace-pre-wrap break-all">{JSON.stringify(apiResponse, null, 2)}</pre>
-                        </details>
-                      </div>
-                    )}
-                  </div>
+                      {!apiResponse.data && (
+                        <p className="text-sm text-gray-500 text-center">No additional data</p>
+                      )}
+                    </div>
+                  )
                 )}
 
                 <div className="mt-8">
@@ -300,13 +329,6 @@ function App() {
                       ? "There was a problem syncing your subscription status. Please try again."
                       : "Something went wrong while identifying your subscription. Please try selecting a plan again."}
                   </p>
-
-                  {/* API Response Display for Error */}
-                  {apiResponse && (
-                    <div className="mb-6 text-left bg-red-50 rounded-xl p-4 border border-red-100">
-                      <pre className="bg-gray-900 text-red-400 text-xs p-3 rounded-lg overflow-auto max-h-48 whitespace-pre-wrap break-all">{JSON.stringify(apiResponse, null, 2)}</pre>
-                    </div>
-                  )}
 
                   <div className="space-y-3">
                     {/* Retry Button - Only if Valid Params but API failed */}
