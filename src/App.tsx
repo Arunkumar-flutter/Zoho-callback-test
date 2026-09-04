@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { ArrowRight, CheckCircle, Receipt, CreditCard, Calendar, Mail, FileText, XCircle, RotateCcw } from 'lucide-react';
 import { isAndroid, isIOS } from "react-device-detect";
@@ -16,19 +16,33 @@ interface PaymentDetails {
   invoice_number: string | null;
 }
 
+interface ApiResponse {
+  success: boolean;
+  message?: string;
+  data?: {
+    subscription_id: string;
+    status: string;
+    plan_code: string;
+    amount: number;
+  };
+  error?: unknown;
+}
+
 function App() {
   const [details, setDetails] = useState<PaymentDetails | null>(null);
   const [isValid, setIsValid] = useState<boolean | null>(null); // null = checking params
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
+  const [apiResponse, setApiResponse] = useState<ApiResponse | null>(null);
 
   const syncSubscription = useCallback(async (paymentDetails: PaymentDetails) => {
     setSyncStatus('syncing');
     try {
-    
-      const response = await axios.post(
+      const response = await axios.post<ApiResponse>(
         `https://vealthx-ollamavm2.centralindia.cloudapp.azure.com/zoho-subscription-test/api/v2/hostedpage/payment-complete`,
         { hostedpage_id: paymentDetails.hostedpage_id }
       );
+
+      setApiResponse(response.data);
 
       if (response.data && response.data.success) {
         setSyncStatus('success');
@@ -36,8 +50,15 @@ function App() {
         console.error('Subscription sync failed:', response.data);
         setSyncStatus('error');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to sync subscription:', error);
+      if (axios.isAxiosError(error) && error.response?.data) {
+        setApiResponse(error.response.data as ApiResponse);
+      } else if (error instanceof Error) {
+        setApiResponse({ success: false, message: error.message });
+      } else {
+        setApiResponse({ success: false, message: 'Unknown error' });
+      }
       setSyncStatus('error');
     }
   }, []);
@@ -63,25 +84,7 @@ function App() {
 
     if (paymentDetails.hostedpage_id) {
       setIsValid(true);
-
-      // Call Sync API
-      const syncSubscription = async () => {
-        setSyncStatus('syncing');
-        try {
-          // Send only hostedpage_id to the API
-        const response = await axios.post(
-        `https://vealthx-ollamavm2.centralindia.cloudapp.azure.com/zoho-subscription-test/api/v2/hostedpage/payment-complete`,
-       { hostedpage_id: paymentDetails.hostedpage_id }
-      );
-
-          setSyncStatus('success');
-        } catch (error) {
-          console.error('Failed to sync subscription:', error);
-          setSyncStatus('error');
-        }
-      };
-
-      syncSubscription();
+      syncSubscription(paymentDetails);
     } else {
       setIsValid(false);
     }
@@ -161,7 +164,7 @@ function App() {
                   <CheckCircle className="w-8 h-8 text-white" />
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-2">Payment Successful</h1>
-                <p className="text-green-100">Thank you for your subscription</p>
+                <p className="text-green-100">{apiResponse?.message || 'Thank you for your subscription'}</p>
               </div>
 
               {/* Content */}
@@ -176,7 +179,7 @@ function App() {
                         </div>
                         <div>
                           <p className="text-xs text-gray-500 font-medium">Amount Paid</p>
-                          <p className="text-lg font-bold text-gray-900">{details.invoice_amount || '0.00'}</p>
+                          <p className="text-lg font-bold text-gray-900">{apiResponse?.data?.amount ?? details.invoice_amount ?? '0.00'}</p>
                         </div>
                       </div>
                     </div>
@@ -189,7 +192,7 @@ function App() {
                             <CreditCard className="w-5 h-5 text-gray-400" />
                             <span className="text-sm text-gray-600">Plan Name</span>
                           </div>
-                          <span className="text-sm font-semibold text-gray-900">{details.plan_name}</span>
+                          <span className="text-sm font-semibold text-gray-900">{apiResponse?.data?.plan_code ?? details.plan_name}</span>
                         </div>
                       )}
 
@@ -223,6 +226,42 @@ function App() {
                         </div>
                       )}
                     </div>
+
+                    {/* API Response Display */}
+                    {apiResponse && (
+                      <div className="mt-4 bg-gray-50 rounded-xl p-4 border border-gray-200">
+
+                        {apiResponse.message && (
+                          <p className="text-sm text-gray-800 font-medium mb-3">{apiResponse.message}</p>
+                        )}
+
+                        {apiResponse.data && (
+                          <div className="space-y-2 bg-white rounded-lg p-3 border border-gray-100">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-gray-500">Subscription ID</span>
+                              <span className="text-sm font-mono font-medium text-gray-900">{apiResponse.data.subscription_id}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-gray-500">Status</span>
+                              <span className="text-sm font-semibold text-gray-900 capitalize bg-green-50 px-2 py-1 rounded">{apiResponse.data.status}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-gray-500">Plan Code</span>
+                              <span className="text-sm font-semibold text-gray-900">{apiResponse.data.plan_code}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-gray-500">Amount</span>
+                              <span className="text-sm font-bold text-gray-900">₹{apiResponse.data.amount}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        <details className="mt-3">
+                          <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600">View raw JSON</summary>
+                          <pre className="mt-2 bg-gray-900 text-green-400 text-xs p-3 rounded-lg overflow-auto max-h-48 whitespace-pre-wrap break-all">{JSON.stringify(apiResponse, null, 2)}</pre>
+                        </details>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -250,7 +289,7 @@ function App() {
                 </div>
                 <h1 className="text-2xl font-bold text-white mb-2">Subscription Sync Failed</h1>
                 <p className="text-red-100">
-                  {isValid ? "We couldn't verify your subscription." : "Invalid subscription details."}
+                  {apiResponse?.message || (isValid ? "We couldn't verify your subscription." : "Invalid subscription details.")}
                 </p>
               </div>
 
@@ -263,6 +302,13 @@ function App() {
                       : "Something went wrong while identifying your subscription. Please try selecting a plan again."}
                   </p>
 
+                  {/* API Response Display for Error */}
+                  {apiResponse && (
+                    <div className="mb-6 text-left bg-red-50 rounded-xl p-4 border border-red-100">
+                      <pre className="bg-gray-900 text-red-400 text-xs p-3 rounded-lg overflow-auto max-h-48 whitespace-pre-wrap break-all">{JSON.stringify(apiResponse, null, 2)}</pre>
+                    </div>
+                  )}
+
                   <div className="space-y-3">
                     {/* Retry Button - Only if Valid Params but API failed */}
                     {isValid && (
@@ -274,7 +320,7 @@ function App() {
                         <span>Retry Sync</span>
                       </button>
                     )}
-<button onclick="window.close()">Close</button>
+<button onClick={() => window.close()}>Close</button>
 
                     <button
                       onClick={handleChoosePlan}
