@@ -1,8 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import { ArrowRight, CheckCircle, Receipt, CreditCard, Calendar, Mail, FileText, XCircle, RotateCcw } from 'lucide-react';
 import { isAndroid, isIOS } from "react-device-detect";
-
 
 interface PaymentDetails {
   hostedpage_id: string | null;
@@ -30,9 +28,24 @@ interface ApiResponse {
 
 function App() {
   const [details, setDetails] = useState<PaymentDetails | null>(null);
-  const [isValid, setIsValid] = useState<boolean | null>(null); // null = checking params
+  const [isValid, setIsValid] = useState<boolean | null>(null);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [apiResponse, setApiResponse] = useState<ApiResponse | null>(null);
+
+  const redirectToApp = useCallback((paymentDetails: PaymentDetails) => {
+    const params = new URLSearchParams();
+    Object.entries(paymentDetails).forEach(([key, value]) => {
+      if (value) params.append(key, value);
+    });
+
+    const WEB_FALLBACK_URL = 'https://vealthx-ollamavm.centralindia.cloudapp.azure.com/dis-test/app/callback?';
+
+    if (isAndroid || isIOS) {
+      window.location.href = `vealthx://app/callback?${params.toString()}`;
+    } else {
+      window.location.href = `${WEB_FALLBACK_URL}${params.toString()}`;
+    }
+  }, []);
 
   const syncSubscription = useCallback(async (paymentDetails: PaymentDetails) => {
     setSyncStatus('syncing');
@@ -64,7 +77,6 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // Extract URL parameters
     const urlParams = new URLSearchParams(window.location.search);
 
     const paymentDetails: PaymentDetails = {
@@ -79,7 +91,6 @@ function App() {
       invoice_number: urlParams.get('invoicenumber'),
     };
 
-
     setDetails(paymentDetails);
 
     if (paymentDetails.hostedpage_id) {
@@ -87,6 +98,7 @@ function App() {
       syncSubscription(paymentDetails);
     } else {
       setIsValid(false);
+      setSyncStatus('error');
     }
   }, [syncSubscription]);
 
@@ -107,8 +119,17 @@ function App() {
     } else {
       window.location.href = `${WEB_FALLBACK_URL}` + params.toString();
     }
+  }, [isValid, syncStatus, details, redirectToApp]);
 
-  };
+  // Single UI: circular progress indicator only
+  // covers idle/checking, syncing, and success (redirecting) - no data display, no buttons
+  if (isValid === null || syncStatus === 'syncing' || (isValid && syncStatus === 'success')) {
+    const message =
+      syncStatus === 'success'
+        ? 'Payment successful! Redirecting to app...'
+        : syncStatus === 'syncing'
+          ? 'Verifying subscription...'
+          : 'Loading...';
 
 
   const handleChoosePlan = () => {
@@ -143,13 +164,17 @@ function App() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="flex flex-col items-center">
-          <div className="w-12 h-12 border-4 border-gray-200 border-t-green-600 rounded-full animate-spin mb-4"></div>
-          <p className="text-gray-600 font-medium">Verifying subscription...</p>
+          <div className="w-12 h-12 border-4 border-gray-200 border-t-purple-600 rounded-full animate-spin mb-4"></div>
+          <p className="text-gray-600 font-medium">{message}</p>
+          {syncStatus === 'success' && (
+            <p className="text-gray-400 text-sm mt-2">Please wait</p>
+          )}
         </div>
       </div>
     );
   }
 
+  // Error / invalid state - minimal, no data, no Choose Plan button
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
